@@ -668,32 +668,6 @@ app.post('/comment', (req, res) => {
     });
 });
 
-// app.post('/posts', (req, res) => {
-//     const user_id = req.cookies.user_data; // Get user ID from cookies
-//     const { text, image, category } = req.body; // Destructure text, image, and category from request body
-
-//     // Take the first item from the category array
-//     const categoryValue = Array.isArray(category) && category.length > 0 ? category[0] : null;
-//    console.log(text,image,categoryValue);
-   
-//     const query = `
-//         INSERT INTO posts (user_id, content, image_url, created_at, edited_at, category)
-//         VALUES (?, ?, ?, NOW(), NOW(), ?)
-//     `;
-
-//     db.query(query, [user_id, text, image, categoryValue], (err, results) => {
-//         if (err) {
-//             console.error("Error creating post:", err.message);
-//             return res.status(500).json({ message: 'Internal server error' });
-//         }
-
-//         res.status(201).json({
-//             message: 'Post created successfully',
-//             post_id: results.insertId, // Return the ID of the newly created post
-//         });
-//     });
-// });
-
 const multer = require('multer');
 const sharp = require('sharp');
 const fs = require('fs');
@@ -727,8 +701,8 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     try {
         // Resize the image
         const resizedImageBuffer = await sharp(req.file.buffer)
-            .resize(800, 800, { fit: 'inside' }) // Resize to max 800x800
-            .toFormat('jpeg', { quality: 80 }) // Convert to JPEG with quality 80
+            .resize(800, 800, { fit: 'inside' }) 
+            .toFormat('jpeg', { quality: 80 })
             .toBuffer();
 
         // Save resized image to local storage
@@ -758,7 +732,6 @@ app.post('/posts', (req, res) => {
         VALUES (?, ?, ?, NOW(), NOW(), ?, ?, ?)
     `;
 
-    // Set default values to user_id as JSON
     const likeUserId = JSON.stringify([user_id]); // Store user_id as a JSON array
     const tagUserId = JSON.stringify([user_id]);  // Store user_id as a JSON array
 
