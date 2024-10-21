@@ -8,7 +8,7 @@ const Login = () => {
     const navigate = useNavigate();
     const { login } = useContext(UserContext);
     const loginn =async()=>{
-        const  response =await fetch(`http://127.0.0.1:8000/login/`,{
+        const  response =await fetch(`http://localhost:3000/login`,{
             method: "POST",
             credentials: 'include',
             headers:{

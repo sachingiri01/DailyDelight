@@ -7,6 +7,8 @@ import Signup from '../pages/singhup';
 import HomePage from '../pages/homepage';
 import Agri from './agriculture';
 import Kisan from "./kisan_bazar"
+import Update_profile from '../pages/update_profile';
+import User_profile from "../pages/User_profile"
 const router = createBrowserRouter([
   {
     path: '/',
@@ -15,6 +17,10 @@ const router = createBrowserRouter([
       {
         path: 'profile',
         element: <Profile />,
+      },
+      {
+       path:"update_profile",
+       element:<Update_profile/>
       },
       {
         path:'login',
@@ -31,6 +37,9 @@ const router = createBrowserRouter([
       },{
         path:"kisan",
         element:<Kisan/>
+      },{
+        path:"user_profile",
+        element:<User_profile/>
       }
     ],
   },

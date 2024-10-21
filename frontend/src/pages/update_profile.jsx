@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import fetch_api from '../fetch/fetch';
-import api from '../Axios';
-const Signup = () => {
+
+const Update_profile = () => {
+    const nevigate=useNavigate();
     const navigate = useNavigate();
-    const [csrfToken, setCsrfToken] = useState(null);
     const [formData, setFormData] = useState({
         profilePicture: null,
         username: '',
@@ -15,37 +14,68 @@ const Signup = () => {
         password: '',
     });
 
-  
+    // Fetch user data on component mount
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const response = await fetch('http://localhost:3000/update_user', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Ensure cookies are sent with the request
+                });
+              
+                if (response.ok) {
+                    const data = await response.json();
+                    const user = data.user;
+
+                    // Set the fetched user data into the form
+                    setFormData({
+                        profilePicture: user.profile_picture,
+                        username: user.username,
+                        userId: user.user_id,
+                        gender: user.gender,
+                        bio: user.bio,
+                        email: user.email_id,
+                        password: '', // Keep password empty for security reasons
+                    });
+                } else {
+                    alert("Failed to fetch user data");
+                    navigate("/profile")
+                }
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+
+        fetchUserData();
+    }, []);
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
- 
     const handleProfilePictureChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
     
             reader.onloadend = () => {
-                // Convert the result to a Base64-encoded string
-                const base64String = reader.result.split(',')[1]; // Remove the data URL prefix
-    
-                // Update the form data with the Base64 string
+                const base64String = reader.result.split(',')[1];
                 setFormData(prev => ({
                     ...prev,
                     profilePicture: base64String
                 }));
             };
     
-            // Read the file as a data URL
             reader.readAsDataURL(file);
         }
     };
-    // setprofilePictureDataUrl(`data:image/png;base64,${formData.profilePicture}`)
-    // const [profilePictureDataUrl, setprofilePictureDataUrl] = useState('')
 
-    const signup = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         const formData1 = {
             user_id: formData.userId,
             username: formData.username,
@@ -55,33 +85,32 @@ const Signup = () => {
             bio: formData.bio,
             profile_picture: formData.profilePicture 
         };
-
-        const response = await fetch(`${fetch_api.signup.url}`, {
+        if(formData1.password.length==0){
+            alert("Please enter new password");
+            return;
+        }
+        const response = await fetch('http://localhost:3000/update_user_final', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials:"include",
             body: JSON.stringify(formData1)
         });
-        
+
         if (response.ok) {
-            alert("Login Now...");
+            alert("Profile updated successfully");
             navigate('/login');
         } else {
             const errorData = await response.json();
-            alert(`Error: ${errorData.Message}`);
+            alert(`Error: ${errorData.message}`);
         }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        await signup();
     };
 
     return (
         <div className="flex justify-center items-center min-h-screen bg-slate-900 p-4">
             <div className="bg-slate-800 p-8 rounded-lg shadow-lg w-full max-w-4xl hover:shadow-purple-400 shadow-md">
-                <h1 className="text-3xl text-slate-100 mb-6 text-center">Sign Up</h1>
+                <h1 className="text-3xl text-slate-100 mb-6 text-center">Update Profile</h1>
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Profile Picture */}
                     <div className="col-span-1">
@@ -125,6 +154,7 @@ const Signup = () => {
                             id="userId" 
                             name="userId" 
                             value={formData.userId} 
+                            readOnly
                             onChange={handleInputChange} 
                             required 
                             className="w-full p-3 border border-slate-600 rounded-md bg-slate-700 text-slate-100"
@@ -172,6 +202,7 @@ const Signup = () => {
                             value={formData.email} 
                             onChange={handleInputChange} 
                             required 
+                            readOnly
                             className="w-full p-3 border border-slate-600 rounded-md bg-slate-700 text-slate-100"
                         />
                     </div>
@@ -186,6 +217,7 @@ const Signup = () => {
                             value={formData.password} 
                             onChange={handleInputChange} 
                             required 
+                            
                             className="w-full p-3 border border-slate-600 rounded-md bg-slate-700 text-slate-100"
                         />
                     </div>
@@ -195,7 +227,7 @@ const Signup = () => {
                             type="submit" 
                             className="w-full p-3 bg-teal-500 text-white rounded-md font-semibold cursor-pointer transition-colors duration-300 hover:bg-teal-600"
                         >
-                            Sign Up
+                            Update Profile
                         </button>
                     </div>
                 </form>
@@ -207,4 +239,4 @@ const Signup = () => {
     );
 };
 
-export default Signup;
+export default Update_profile;

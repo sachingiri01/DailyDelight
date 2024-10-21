@@ -2,20 +2,7 @@ import React from 'react';
 import { Search } from 'lucide-react';
 import { useState,useEffect,useRef } from 'react';
 import fetch_api from '../fetch/fetch'
-
-const UserProfileItem = ({ user }) => (
-  <div className="flex items-center space-x-3 p-2 hover:cursor-pointer hover:bg-slate-700 rounded-lg transition-colors duration-200">
-    <img 
-      src={user.profile_picture} 
-      alt={user.username[0,3]} 
-      className="w-10 h-10  bg-slate-500 rounded-full object-cover flex justify-center text-center"
-    />
-    <div className="flex-grow">
-      <p className="text-slate-200 font-semibold">{user.username}</p>
-      <p className="text-slate-400 text-sm">@{user.user_id}</p>
-    </div>
-  </div>
-);
+import { useNavigate } from 'react-router-dom';
 
 const UserProfileList = ({ close }) => {
     const inputRef = useRef(null);
@@ -45,7 +32,7 @@ const UserProfileList = ({ close }) => {
             },
             })
             const res=await response.json();
-             console.log(res.data);
+             //(res.data);
              
             if(res.Success){
               setloading(false);
@@ -53,7 +40,27 @@ const UserProfileList = ({ close }) => {
             }
             
       }
-    
+      const nevigate=useNavigate();
+      const UserProfileItem = ({ user }) => {
+        const handle_redirect=(id)=>{
+          nevigate(`/user_profile?user_id=${id}`);
+          close();
+      }
+        return (
+        <div onClick={()=>handle_redirect(user.user_id)} className="flex items-center  space-x-3 p-2 hover:cursor-pointer hover:bg-slate-700 rounded-lg transition-colors duration-200">
+          <img 
+            src={user.profile_picture} 
+            alt={user.username[0,3]} 
+            className="w-10 h-10  bg-slate-500 rounded-full object-cover flex justify-center text-center"
+          />
+          <div className="flex-grow">
+            <p className="text-slate-200 font-semibold">{user.username}</p>
+            <p className="text-slate-400 text-sm">@{user.user_id}</p>
+          </div>
+        </div>
+        )
+      }
+      
       useEffect(() => {
         const fetchData = async () => {
           await get_search();
