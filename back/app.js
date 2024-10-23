@@ -26,7 +26,6 @@ const db = mysql.createPool({
     password: '',   // Your MySQL password
     database: 'dailydelight' // Your MySQL database name
 });
-
 // User signup route
 app.post('/signup', async (req, res) => {
     const { user_id, username, email_id, password, gender = '', bio = '', profile_picture = '' } = req.body;
@@ -770,3 +769,147 @@ app.get('/authenticate', (req, res) => {
 });
 
 
+
+app.post('/create-report', (req, res) => {
+    const user_id = req.cookies.user_data; // Extract user_id from cookies
+    const { reported_user_id, post_id } = req.body; // Extract other fields from req.body
+
+    if (!user_id) {
+        return res.status(400).json({
+            Message: 'User is not logged in',
+            success: false
+        });
+    }
+
+    // Check if the user is trying to report their own account
+    if (user_id === reported_user_id) {
+        return res.status(400).json({
+            Message: 'You cannot report your own account',
+            success: false
+        });
+    }
+
+    // Check if the report already exists
+    const checkQuery = `
+        SELECT * FROM report 
+        WHERE user_id = ? AND post_id = ? AND reported_user_id = ?
+    `;
+
+    db.query(checkQuery, [user_id, post_id || null, reported_user_id || null], (err, results) => {
+        if (err) {
+            console.error('Error checking report existence:', err);
+            return res.status(500).json({
+                Message: 'Database error during check',
+                success: false
+            });
+        }
+
+        if (results.length > 0) {
+            // Report already exists
+            return res.status(400).json({
+                Message: 'You have already reported this post or user',
+                success: false
+            });
+        } else {
+            // Insert query with UUID() function for automatic UUID generation
+            const insertQuery = `
+                INSERT INTO report (uuid, user_id, reported_user_id, post_id, created_at)
+                VALUES (UUID(), ?, ?, ?, CURRENT_TIMESTAMP)
+            `;
+
+            db.query(insertQuery, [user_id, reported_user_id || null, post_id || null], (err, result) => {
+                if (err) {
+                    console.error('Error creating report:', err);
+                    return res.status(500).json({
+                        Message: 'Database error during report creation',
+                        success: false
+                    });
+                }
+
+                return res.json({
+                    Message: 'Reported successfully',
+                    success: true
+                });
+            });
+        }
+    });
+});
+
+
+app.post('/delete_post', (req, res) => {
+    const { post_id } = req.body; // Extract post_id from req.body
+    const user_id = req.cookies.user_data; // Get user_id from cookies
+
+    if (!post_id) {
+        return res.status(400).json({
+            message: 'Post ID is required',
+            success: false
+        });
+    }
+
+    if (!user_id) {
+        return res.status(401).json({
+            message: 'Unauthorized: User ID is required',
+            success: false
+        });
+    }
+
+    // First, check if the user_id of the post matches the one in the cookies
+    const queryCheckOwnership = `
+        SELECT user_id FROM posts
+        WHERE post_id = ?
+    `;
+
+    db.query(queryCheckOwnership, [post_id], (err, result) => {
+        if (err) {
+            console.error('Error checking post ownership:', err);
+            return res.status(500).json({
+                message: 'Database error',
+                success: false
+            });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({
+                message: 'Post not found',
+                success: false
+            });
+        }
+
+        // Check if the user_id of the post matches the one in the cookies
+        if (result[0].user_id !== user_id) {
+            return res.status(403).json({
+                message: 'Forbidden: You do not have permission to delete this post',
+                success: false
+            });
+        }
+
+        // If user is authorized, delete the post
+        const queryDeletePost = `
+            DELETE FROM posts 
+            WHERE post_id = ?
+        `;
+
+        db.query(queryDeletePost, [post_id], (err, result) => {
+            if (err) {
+                console.error('Error deleting post:', err);
+                return res.status(500).json({
+                    message: 'Database error',
+                    success: false
+                });
+            }
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    message: 'Post not found',
+                    success: false
+                });
+            }
+
+            return res.json({
+                message: 'Post deleted successfully',
+                success: true
+            });
+        });
+    });
+});

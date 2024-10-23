@@ -265,14 +265,14 @@ if(res.Success){
     const [acpt_sent_follow_chat, setacpt_sent_follow_chat] = useState('Follow')
     const unfollow_follow=async()=>{
       if(acpt_sent_follow_chat=="Follow"){
-        setacpt_sent_follow_chat("Sent");
+        setacpt_sent_follow_chat("Following");
         await sent_follow;
       }
       else if(acpt_sent_follow_chat=="Following"){
         setacpt_sent_follow_chat("Follow");
         await unfollow;
       }
-      else if(acpt_sent_follow_chat=='Sent'){
+      else if(acpt_sent_follow_chat=='Following'){
         setacpt_sent_follow_chat('Follow');
         await remove_sent_follow;
 
@@ -302,9 +302,10 @@ if(res.Success){
     
     
         return(
-          <li key={suggestion.user_id} onClick={()=>handle_redirect(suggestion.user_id)} className="flex hover:cursor-pointer items-center mb-3 hover:bg-slate-600 p-1 px-3 rounded-md">
+          <li key={suggestion.user_id}  className="flex hover:cursor-pointer items-center mb-3 hover:bg-slate-600 p-1 px-3 rounded-md">
           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center mr-3">
            <img className='w-10 h-10 rounded-full' 
+           onClick={()=>handle_redirect(suggestion.user_id)}
            src={suggestion.profile_picture} alt="" />
           </div>
           <span className="text-white">{suggestion.username.substring(0,11)}</span>
@@ -332,8 +333,42 @@ if(res.Success){
    }
    }
 
+   
 
 
+
+
+
+
+
+
+
+
+
+
+
+const report=async(post_id,user_id)=>{
+    const confirmed=confirm("You really want to report?")
+    if(!confirmed) return; 
+  const response = await fetch('http://localhost:3000/create-report', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({post_id,reported_user_id:user_id}),
+});
+
+const res = await response.json();
+if (res.success) {
+    alert('Report created successfully!');
+} else {
+    alert('Failed to create report. Please try again.');
+}
+}
+
+
+   
    const handle_delete=async()=>{
     const response = await fetch('http://localhost:3000/delete_account', {
       method: 'GET',
@@ -422,13 +457,19 @@ if(res.Success){
     const toggleComments = () => {
       setShowComments(!showComments);
   };
+
+  const handle_report=async()=>{
+    await report(post.post.post_id,post.post.user_id);
+
+  }
     
   
     return (
       <div key={post.post.user_id} className="mb-6 bg-slate-800 py-5 px-5 rounded-md">
         <div className="flex items-center mb-2">
           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center mr-3">
-            <span className="text-white text-sm">{post.post.user_id.substring(0, 2).toUpperCase()}</span>
+            {/* <img src={post.post.image_url} alt={post.post.user_id.substring(0, 2).toUpperCase()} /> */}
+            <span>{post.post.user_id.substring(0, 2).toUpperCase()} </span>
           </div>
           <div className="flex flex-col">
             <h3 className="font-semibold text-lg">{post.post.user_id}</h3>
@@ -437,7 +478,7 @@ if(res.Success){
         </div>
         <p className="text-gray-400 mb-3">{post.post.content}</p>
         <div className="max-h-[400px] object-cover items-center flex justify-center">
-          <img src={post.post.image_url} className="h-[400px] w-full object-cover" alt="" />
+          <img src={post.post.image_url} className="h-[400px] w-full object-scale-down" alt="" />
         </div>
         <div className="flex justify-between mt-2 text-sm">
           <button className="text-blue-400 hover:underline flex items-center gap-1">
@@ -451,7 +492,7 @@ if(res.Success){
                  Comment 
                  </button>
         {showComments && <Comments postId={post.post.post_id} />}
-          <button className="text-blue-400 hover:underline">Tagged Users {post.post.tag_user_id.length}</button>
+          <button className="text-blue-400 hover:underline font-bold text-red-500" onClick={handle_report}>Report</button>
           <button className="text-blue-400 hover:underline">Created At {post.post.created_at.substring(0, 10)}</button>
         </div>
       </div>
@@ -470,19 +511,10 @@ if(res.Success){
           </div>
           <h2 className="text-xl font-semibold text-center mb-2">{admin[0].username}</h2>
           <p className="text-gray-400 text-center">{admin[0].user_id}</p>
-          <div className="flex justify-around mt-6 text-center">
-            <div>
-              <h3 className="font-semibold text-white">{admin[0].friends_id?admin[0].friends_id.length:0}</h3>
-              <p className="text-gray-400 text-sm">Friends</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">{admin[0].request_received_id?admin[0].request_received_id.length:0}</h3>
-              <p className="text-gray-400 text-sm">Request Recieved</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">{admin[0].request_sent_id?admin[0].request_sent_id.length:0}</h3>
-              <p className="text-gray-400 text-sm">Requst Sent</p>
-            </div>
+          <div className=" justify-around mt-6 text-center">
+          <p className='translate-x-2 transition-transform underline animate-slide duration-200 repeat text-lg font-semibold text-sky-400 '>Hello {admin[0].username}</p>
+            <p>About Me : {admin[0].bio}</p>
+           
            
           </div>
           <p className='text-center py-2'>{admin[0].email_id}</p>

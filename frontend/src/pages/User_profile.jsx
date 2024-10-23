@@ -20,6 +20,7 @@ const HomePage = () => {
   const [trend_user, settrend_user] = useState([])
   const [loading, setloading] = useState(true)
   const { user, logout } = useContext(UserContext);
+  const [friends_sent_req, setfriends_sent_req] = useState(0)
   const profile = {
     name: 'John Doe',
     bio: 'Software Engineer at ABC Company',
@@ -52,7 +53,6 @@ const HomePage = () => {
     
 })
 const res=await response.json();
-//("new   yhtrb f    r ",res);
 
 if(res.Success){
 
@@ -60,7 +60,31 @@ if(res.Success){
 }
   }
 
+  const report=async(post_id)=>{
+    const confirmed=confirm("You really want to report?")
+    if(!confirmed) return; 
+    const user_id=getQueryParams();
 
+    const response = await fetch('http://localhost:3000/create-report', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({post_id:post_id?post_id:null,reported_user_id:user_id}),
+  });
+  
+  const res = await response.json();
+  if (res.success) {
+      alert(res.Message);
+      // Optionally reset form fields
+      setReportedUserId('');
+      setPostId('');
+  } else {
+    alert(res.Message);
+  }
+  }
+  
 
  
 
@@ -133,61 +157,131 @@ if(res.Success){
   const mouse_leave=(e)=>{
     e.target.style.backgroundColor='#374151';
   }
-   const Ttuser=({suggestion})=>{
-    //("this is hhh : ",suggestion);
-    const [acpt_sent_follow_chat, setacpt_sent_follow_chat] = useState('Follow')
-    const unfollow_follow=async()=>{
-      if(acpt_sent_follow_chat=="Follow"){
-        setacpt_sent_follow_chat("Sent");
-        await sent_follow;
-      }
-      else if(acpt_sent_follow_chat=="Following"){
-        setacpt_sent_follow_chat("Follow");
-        await unfollow;
-      }
-      else if(acpt_sent_follow_chat=='Sent'){
-        setacpt_sent_follow_chat('Follow');
-        await remove_sent_follow;
-
-      }else if(acpt_sent_follow_chat=='Accept'){
-        setacpt_sent_follow_chat("Following");
-        await accpt_follow;
-      }
-    }
-
-
-    useEffect(() => {
-      if (suggestion.friends_id && suggestion.friends_id.includes(admin.user_id)) {
-
-        setacpt_sent_follow_chat('Following');
-    } else if (suggestion.request_sent_id && suggestion.request_sent_id.includes(admin.user_id)) {
-       
-        setacpt_sent_follow_chat('Accept');
-    } else if (suggestion.request_received_id && suggestion.request_received_id.includes(admin.user_id)) {
-     
-        setacpt_sent_follow_chat('Sent');
-    } else {
+//    const Ttuser=({suggestion})=>{
+//     //("this is hhh : ",suggestion);
+    
+//     const [acpt_sent_follow_chat, setacpt_sent_follow_chat] = useState('')
+//     useEffect(() => {
+//         setacpt_sent_follow_chat("Follow")
+//     }, [])
+    
+//     const unfollow_follow=async()=>{
+//       console.log("is it here");
       
-        setacpt_sent_follow_chat('Follow');
-    }
-    }, [])
+//       if(acpt_sent_follow_chat=="Follow"){
+//         setacpt_sent_follow_chat("Sent");
+//         setfriends_sent_req(friends_sent_req+1)
+//         // await sent_follow;
+//       }
+//       else if(acpt_sent_follow_chat=="Following"){
+//         setacpt_sent_follow_chat("Follow");
+//         // await unfollow;
+//       }
+//       else if(acpt_sent_follow_chat=='Sent'){
+//         setacpt_sent_follow_chat('Follow');
+//         setfriends_sent_req(friends_sent_req-1)
+//         // await remove_sent_follow;
+// // 
+//       }else if(acpt_sent_follow_chat=='Accept'){
+//         setacpt_sent_follow_chat("Following");
+//         // await accpt_follow;
+//       }
+//     }
+
+
+//     // useEffect(() => {
+//     //   if (suggestion.friends_id && suggestion.friends_id.includes(admin.user_id)) {
+
+//     //     setacpt_sent_follow_chat('Following');
+//     // } else if (suggestion.request_sent_id && suggestion.request_sent_id.includes(admin.user_id)) {
        
-    const handle_redirect=(id)=>{
-      nevigate(`/user_profile?user_id=${id}`);
-  }
+//     //     setacpt_sent_follow_chat('Accept');
+//     // } else if (suggestion.request_received_id && suggestion.request_received_id.includes(admin.user_id)) {
+     
+//     //     setacpt_sent_follow_chat('Sent');
+//     // } else {
+      
+//     //     setacpt_sent_follow_chat('Follow');
+//     // }
+//     // }, [])
+       
+//     const handle_redirect=(id)=>{
+//       nevigate(`/user_profile?user_id=${id}`);
+//   }
   
-        return(
-          <li    onClick={()=>handle_redirect(suggestion.user_id)} key={suggestion.user_id} className="flex hover:cursor-pointer items-center mb-3 hover:bg-slate-600 p-1 px-3 rounded-md">
+//         return(
+//           <li     className="flex hover:cursor-pointer items-center mb-3 hover:bg-slate-600 p-1 px-3 rounded-md">
+//           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center mr-3">
+//            <img className='w-10 h-10 rounded-full' onClick={()=>handle_redirect(suggestion.user_id)} key={suggestion.user_id} src={suggestion.profile_picture} alt="" />
+//           </div>
+//           <span className="text-white">{suggestion.username.substring(0,11)}</span>
+//           <button className="ml-auto bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg" onClick={unfollow_follow}>
+//             {acpt_sent_follow_chat}
+//           </button>
+//         </li>
+//         )
+//    }
+
+const Ttuser = ({ suggestion }) => {
+  const [acpt_sent_follow_chat, setacpt_sent_follow_chat] = useState(() => {
+      // Determine the initial state based on the suggestion
+      if (suggestion.friends_id && suggestion.friends_id.includes(admin.user_id)) {
+          return 'Following';
+      } else if (suggestion.request_sent_id && suggestion.request_sent_id.includes(admin.user_id)) {
+          return 'Accept';
+      } else if (suggestion.request_received_id && suggestion.request_received_id.includes(admin.user_id)) {
+          return 'Sent';
+      } else {
+          return 'Follow';
+      }
+  });
+
+  const [friends_sent_req, setfriends_sent_req] = useState(0); // Initialize this state if needed
+
+  const unfollow_follow = async () => {
+      if (acpt_sent_follow_chat === 'Follow') {
+          setacpt_sent_follow_chat('Following');
+          setfriends_sent_req(friends_sent_req + 1);
+          // await sent_follow;
+      } else if (acpt_sent_follow_chat === 'Following') {
+          setacpt_sent_follow_chat('Follow');
+          // await unfollow;
+      } else if (acpt_sent_follow_chat === 'Following') {
+          setacpt_sent_follow_chat('Follow');
+          setfriends_sent_req(friends_sent_req - 1);
+          // await remove_sent_follow;
+      } else if (acpt_sent_follow_chat === 'Accept') {
+          setacpt_sent_follow_chat('Following');
+          // await accpt_follow;
+      }
+  };
+
+  const handle_redirect = (id) => {
+      nevigate(`/user_profile?user_id=${id}`);
+  };
+
+  return (
+      <li className="flex hover:cursor-pointer items-center mb-3 hover:bg-slate-600 p-1 px-3 rounded-md">
           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center mr-3">
-           <img className='w-10 h-10 rounded-full' src={suggestion.profile_picture} alt="" />
+              <img 
+                  className="w-10 h-10 rounded-full" 
+                  onClick={() => handle_redirect(suggestion.user_id)} 
+                  key={suggestion.user_id} 
+                  src={suggestion.profile_picture} 
+                  alt="" 
+              />
           </div>
-          <span className="text-white">{suggestion.username.substring(0,11)}</span>
-          <button className="ml-auto bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg" onClick={unfollow_follow}>
-            {acpt_sent_follow_chat}
+          <span className="text-white">{suggestion.username.substring(0, 11)}</span>
+          <button 
+              className="ml-auto bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg" 
+              onClick={unfollow_follow}
+          >
+              {acpt_sent_follow_chat}
           </button>
-        </li>
-        )
-   }
+      </li>
+  );
+};
+
 
   const Posst = (post ) => {
     const [likecount, setlikecount] = useState(post.post.like_user_id.length);
@@ -255,6 +349,25 @@ if(res.Success){
       setShowComments(!showComments);
   };
     
+  const handle_delete_post=async()=>{
+    console.log("getting hit");
+    
+    const response = await fetch('http://localhost:3000/delete_post', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ post_id: post.post.post_id }),
+      credentials:"include",
+  });
+   const res=await response.json();
+   if(res.success){
+    alert(res.message)
+   }else{
+    alert(res.message)
+   }
+
+  } 
   
     return (
       <div key={post.post.user_id} className="mb-6 bg-slate-800 py-5 px-5 rounded-md">
@@ -269,7 +382,7 @@ if(res.Success){
         </div>
         <p className="text-gray-400 mb-3">{post.post.content}</p>
         <div className="max-h-[400px] object-cover items-center flex justify-center">
-          <img src={post.post.image_url} className="h-[400px]  w-full object-cover" alt="" />
+          <img src={post.post.image_url} className="h-[400px]  w-full object-scale-down" alt="" />
         </div>
         <div className="flex justify-between mt-2 text-sm">
           <button className="text-red-400 hover: flex items-center gap-1">
@@ -286,11 +399,11 @@ if(res.Success){
         {showComments && <Comments postId={post.post.post_id} />}
          
 
-          <button className="text-yellow-400 hover:">
-            🏷 Tagged Users {post.post.tag_user_id.length}
+          <button className="font-bold text-red-500 hover:" onClick={()=>report(post.post.post_id)}>
+            Report 
           </button>
 
-          <p className="text-purple-400 hover:">Created At {post.post.created_at.substring(0, 10)}</p>
+          <p className="text-purple-400 hover:text-red-400 underline hover:cursor-pointer" onClick={handle_delete_post}>Delete Post 🗑️ </p>
         </div>
       </div>
     );
@@ -311,19 +424,9 @@ if(res.Success){
 </p>
 
           <p className="text-gray-400 text-center">{admin.user_id}</p>
-          <div className="flex justify-around text-sm mt-6 text-center">
-            <div className=''>
-              <h3 className="font-semibold text-white">{admin.friends_id?admin.friends_id.length:0}</h3>
-              <p className="text-red-600 text-sm">Friends</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">{admin.request_received_id?admin.request_received_id.length:0}</h3>
-              <p className="text-yellow-400 text-sm">Request Recieved</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">{admin.request_sent_id?admin.request_sent_id.length:0}</h3>
-              <p className="text-pink-400 text-sm">Requst Sent</p>
-            </div>
+          <div className=" justify-around text-sm mt-6 text-center">
+            <p className='translate-x-2 transition-transform animate-slide duration-200 repeat text-lg font-semibold text-sky-400 underline '>Hello {admin.username}</p>
+            <p>About Me : {admin.bio}</p>
            
           </div>
           <p className='text-center py-2 text-green-400'>{admin.email_id}</p>
@@ -337,7 +440,7 @@ if(res.Success){
               <button onClick={handle_redirect}>Your Profile 👌</button>
             </li>
             <li onMouseEnter={mouse_enter} onMouseLeave={mouse_leave} className='bg-gray-600  hover:cursor-pointer hover:py-2 transition hover:translate-x-3 duration-400 rounded-md p-1 pl-2  hover:shadow-yellow-400 shadow-md'>
-              <button>Logout 😒</button>
+              <button onClick={()=>report(false)}>Report 😒</button>
             </li>
             
 
